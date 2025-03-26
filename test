@@ -1,11 +1,112 @@
-$funcs = array();
-for($i = 0; $i < 10; $i++) $funcs[] = function() use($i) { return $i; };
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заявка на измерение</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
-foreach($funcs as $func) echo $func().",";
-// выведется 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 !
+    <div class="container">
+        <h2>Заявка в СММ</h2>
+        <table class="measurement-form">
+            <tr>
+                <th>Дата</th>
+                <td><input type="date" value="2023-01-22"></td>
+                <th>Номер заявки</th>
+                <td><input type="text" value="CMM-2023-001"></td>
+            </tr>
+            <tr>
+                <th>Наименование</th>
+                <td><input type="text" value="Шланг"></td>
+                <th>Номер детали</th>
+                <td><input type="text" value="3506045"></td>
+            </tr>
+            <tr>
+                <th>Дата изготовления</th>
+                <td><input type="date" value="2022-12-15"></td>
+                <th>Поставщик</th>
+                <td><input type="text" value="Китай"></td>
+            </tr>
+            <tr>
+                <th>Дата предоставления</th>
+                <td><input type="date" value="2023-01-22"></td>
+                <th>Количество</th>
+                <td><input type="number" value="5"></td>
+            </tr>
+            <tr>
+                <th>Материал</th>
+                <td colspan="3">
+                    <label><input type="checkbox" checked> Plastic</label>
+                    <label><input type="checkbox"> Metal</label>
+                    <label><input type="checkbox"> Painted</label>
+                    <label><input type="checkbox"> Zeiss</label>
+                    <label><input type="checkbox"> LaserTracer</label>
+                </td>
+            </tr>
+        </table>
 
-$funcs = array();
-for($i = 0; $i < 10; $i++) $funcs[] = function() use(&$i) { return $i; };
+        <h3>Протокол поставки</h3>
+        <table class="supply-protocol">
+            <tr>
+                <th>Дата</th>
+                <td><input type="date" value="2023-01-22"></td>
+                <th>Цех/отдел</th>
+                <td><input type="text" value="271"></td>
+            </tr>
+            <tr>
+                <th>ФИО</th>
+                <td><input type="text" value="Петров И.О."></td>
+                <th>Телефон</th>
+                <td><input type="tel" value="+7(***)***-**-**"></td>
+            </tr>
+            <tr>
+                <th>Должность</th>
+                <td><input type="text" value="Специалист"></td>
+                <th>Таб. номер</th>
+                <td><input type="text" value="3-15-15"></td>
+            </tr>
+        </table>
 
-foreach($funcs as $func) echo $func().",";
-// выведется 10, 10, 10, 10, 10, 10, 10, 10, 10, 10
+        <h3>Задание для измерения</h3>
+        <table class="measurement-task">
+            <tr>
+                <th>Номер детали</th>
+                <td><input type="text" value="3506045"></td>
+                <th>Наименование</th>
+                <td><input type="text" value="Шланг"></td>
+            </tr>
+            <tr>
+                <th colspan="4">Описание задания</th>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    <textarea>Проверить геометрию детали, размеры 14,5-0,5мм; 20мм</textarea>
+                </td>
+            </tr>
+        </table>
+
+        <h3>Обоснованное примечание</h3>
+        <textarea class="justification-note">Дефект "не герметичность"</textarea>
+
+        <h3>Прием/сдача</h3>
+        <textarea class="acceptance-notes" placeholder="Введите примечания..."></textarea>
+
+        <h3>Примечания</h3>
+        <textarea class="general-notes" placeholder="Введите примечания..."></textarea>
+
+        <div class="signature-section">
+            <label>Время измерения:</label>
+            <input type="text" class="measurement-time" placeholder="Введите время">
+            
+            <label>Сотрудник ОМКУ/К:</label>
+            <input type="text" class="employee-name" placeholder="Введите имя">
+            
+            <label>Подпись:</label>
+            <input type="text" class="signature" placeholder="Введите подпись">
+        </div>
+    </div>
+
+</body>
+</html>
