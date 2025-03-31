@@ -1,205 +1,48 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 20px;
-    padding: 0;
-}
+<?
+require($_SERVER['DOCUMENT_ROOT'].'/bitrix/header.php');
 
-.container {
-    max-width: 800px;
-    background: white;
-    padding: 20px;
-    margin: auto;
-    box-shadow: 0px 0px 10px #ccc;
-    border-radius: 10px;
-}
+// Подключаем функции
+require_once $_SERVER['DOCUMENT_ROOT'].'/local/portal_hub/functions.php';
 
-h2, h3 {
-    text-align: center;
-}
+$APPLICATION->SetTitle("Хаб корпоративных порталов");
+$APPLICATION->SetPageProperty("description", "Единый доступ ко всем порталам компании");
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-}
+// Получаем порталы
+$portals = getPortalsList();
 
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-}
-
-input, textarea {
-    width: 100%;
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 14px;
-}
-
-textarea {
-    height: 60px;
-    resize: none;
-}
-
-label {
-    font-weight: bold;
-    margin-right: 10px;
-}
-
-.signature-section {
-    margin-top: 20px;
-}
-
-.signature-section label {
-    display: block;
-    margin-top: 10px;
-}
-
-.signature-section input {
-    width: 100%;
-}
-
-.acceptance-notes, .general-notes, .justification-note {
-    width: 100%;
-    height: 60px;
-    padding: 5px;
-    border: 1px solid #aaa;
-    border-radius: 5px;
-    resize: none;
-    font-size: 14px;
-    margin-bottom
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Заявка на измерение</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-
-    <div class="container">
-        <h2>Заявка в СММ</h2>
-        <table class="measurement-form">
-            <tr>
-                <th>Дата</th>
-                <td><input type="date" value="2023-01-22"></td>
-                <th>Номер заявки</th>
-                <td><input type="text" value="CMM-2023-001"></td>
-            </tr>
-            <tr>
-                <th>Наименование</th>
-                <td><input type="text" value="Шланг"></td>
-                <th>Номер детали</th>
-                <td><input type="text" value="3506045"></td>
-            </tr>
-            <tr>
-                <th>Дата изготовления</th>
-                <td><input type="date" value="2022-12-15"></td>
-                <th>Поставщик</th>
-                <td><input type="text" value="Китай"></td>
-            </tr>
-            <tr>
-                <th>Дата предоставления</th>
-                <td><input type="date" value="2023-01-22"></td>
-                <th>Количество</th>
-                <td><input type="number" value="5"></td>
-            </tr>
-            <tr>
-                <th>Материал</th>
-                <td colspan="3">
-                    <label><input type="checkbox" checked> Plastic</label>
-                    <label><input type="checkbox"> Metal</label>
-                    <label><input type="checkbox"> Painted</label>
-                    <label><input type="checkbox"> Zeiss</label>
-                    <label><input type="checkbox"> LaserTracer</label>
-                </td>
-            </tr>
-        </table>
-
-        <h3>Протокол поставки</h3>
-        <table class="supply-protocol">
-            <tr>
-                <th>Дата</th>
-                <td><input type="date" value="2023-01-22"></td>
-                <th>Цех/отдел</th>
-                <td><input type="text" value="271"></td>
-            </tr>
-            <tr>
-                <th>ФИО</th>
-                <td><input type="text" value="Петров И.О."></td>
-                <th>Телефон</th>
-                <td><input type="tel" value="+7(***)***-**-**"></td>
-            </tr>
-            <tr>
-                <th>Должность</th>
-                <td><input type="text" value="Специалист"></td>
-                <th>Таб. номер</th>
-                <td><input type="text" value="3-15-15"></td>
-            </tr>
-        </table>
-
-        <h3>Задание для измерения</h3>
-        <table class="measurement-task">
-            <tr>
-                <th>Номер детали</th>
-                <td><input type="text" value="3506045"></td>
-                <th>Наименование</th>
-                <td><input type="text" value="Шланг"></td>
-            </tr>
-            <tr>
-                <th colspan="4">Описание задания</th>
-            </tr>
-            <tr>
-                <td colspan="4">
-                    <textarea>Проверить геометрию детали, размеры 14,5-0,5мм; 20мм</textarea>
-                </td>
-            </tr>
-        </table>
-
-        <h3>Обоснованное примечание</h3>
-        <textarea class="justification-note">Дефект "не герметичность"</textarea>
-
-        <h3>Прием/сдача</h3>
-        <textarea class="acceptance-notes" placeholder="Введите примечания..."></textarea>
-
-        <h3>Примечания</h3>
-        <textarea class="general-notes" placeholder="Введите примечания..."></textarea>
-
-        <div class="signature-section">
-            <label>Время измерения:</label>
-            <input type="text" class="measurement-time" placeholder="Введите время">
-            
-            <label>Сотрудник ОМКУ/К:</label>
-            <input type="text" class="employee-name" placeholder="Введите имя">
-            
-            <label>Подпись:</label>
-            <input type="text" class="signature" placeholder="Введите подпись">
-        </div>
+// Подключаем стили
+$APPLICATION->SetAdditionalCSS('/local/portal_hub/style.css');
+?>
+<div class="portal-hub-container">
+    <h1 class="portal-hub-title">Корпоративные порталы</h1>
+    
+    <div class="portal-search">
+        <input type="text" id="portalSearch" placeholder="Поиск портала...">
     </div>
+    
+    <div class="portal-grid">
+        <?foreach ($portals as $portal):?>
+        <div class="portal-card" data-category="<?=htmlspecialchars($portal['CATEGORY'])?>">
+            <?if($portal['LOGO']):?>
+            <div class="portal-logo">
+                <img src="<?=$portal['LOGO']?>" alt="<?=htmlspecialchars($portal['NAME'])?>">
+            </div>
+            <?endif;?>
+            <div class="portal-info">
+                <h3>
+                    <a href="<?=$portal['URL']?>" target="_blank">
+                        <?=htmlspecialchars($portal['NAME'])?>
+                    </a>
+                </h3>
+                <p><?=htmlspecialchars($portal['DESCRIPTION'])?></p>
+                <span class="portal-category"><?=htmlspecialchars($portal['CATEGORY'])?></span>
+            </div>
+        </div>
+        <?endforeach;?>
+    </div>
+</div>
 
-</body>
-</html>
+<?
+// Подключаем скрипты
+$APPLICATION->AddHeadScript('/local/portal_hub/script.js');
+require($_SERVER['DOCUMENT_ROOT'].'/bitrix/footer.php');
