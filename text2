@@ -1,0 +1,123 @@
+Проблема в том, что ссылка на Диск формируется неправильно. Давайте исправим код и сделаем корректную привязку. Вот рабочий вариант:
+
+### 1. Обновляем функцию получения ссылки (`/local/portal_hub/functions.php`):
+
+```php
+function getPortalLink($portalId) {
+    global $USER;
+    
+    $portal = CIBlockElement::GetByID($portalId)->Fetch();
+    if (!$portal) return '#';
+    
+    // Если есть URL - используем его
+    if (!empty($portal['PROPERTY_URL_VALUE'])) {
+        return $portal['PROPERTY_URL_VALUE'];
+    }
+    
+    // Если есть диск - формируем ссылку на него
+    if (!empty($portal['PROPERTY_DISK_STORAGE_VALUE'])) {
+        $storageId = (int)$portal['PROPERTY_DISK_STORAGE_VALUE'];
+        $storage = \Bitrix\Disk\Storage::loadById($storageId);
+        
+        if ($storage) {
+            $root = $storage->getRootObject();
+            return \Bitrix\Disk\Driver::getInstance()->getUrlManager()->getPathFolderList($root);
+        }
+    }
+    
+    return '#';
+}
+```
+
+### 2. Проверяем инициализацию модуля Диска (`/local/php_interface/init.php`):
+
+```php
+AddEventHandler('main', 'OnProlog', function() {
+    if (!\Bitrix\Main\Loader::includeModule('disk')) {
+        \Bitrix\Main\Loader::includeModule('disk');
+    }
+});
+```
+
+### 3. Обновляем шаблон отображения (`/local/portal_hub/index.php`):
+
+```php
+<a href="<?=htmlspecialcharsbx(getPortalLink($portal['ID']))?>" <?=strpos(getPortalLink($portal['ID']), 'http') === 0 ? 'target="_blank"' : ''?>>
+    <?=htmlspecialcharsbx($portal['NAME'])?>
+</a>
+```
+
+### 4. Проверяем создание диска (обновите обработчик):
+
+```php
+function AttachDiskToPortal(&$arFields) {
+    if ($arFields["IBLOCK_ID"] == IBLOCK_PORTALS_ID) {
+        if (!\Bitrix\Main\Loader::includeModule('disk')) return;
+        
+        $element = CIBlockElement::GetByID($arFields["ID"])->Fetch();
+        if (!empty($element["PROPERTY_DISK_STORAGE_VALUE"])) return;
+        
+        try {
+            $storage = \Bitrix\Disk\Driver::getInstance()->addStorage([
+                'NAME' => 'Портал: '.$arFields["NAME"],
+                'ENTITY_TYPE' => \Bitrix\Disk\ProxyType\Common::className(),
+                'ENTITY_ID' => 'portal_'.$arFields["ID"],
+                'MODULE_ID' => 'iblock'
+            ]);
+            
+            CIBlockElement::SetPropertyValuesEx(
+                $arFields["ID"],
+                $arFields["IBLOCK_ID"],
+                ["DISK_STORAGE" => $storage->getId()]
+            );
+            
+            // Создаем базовые папки
+            $root = $storage->getRootObject();
+            $folders = ['Документы', 'Шаблоны', 'Архив'];
+            foreach ($folders as $folderName) {
+                $root->addSubFolder(['NAME' => $folderName]);
+            }
+        } catch (\Exception $e) {
+            AddMessage2Log("Ошибка создания диска: ".$e->getMessage(), 'portal_hub');
+        }
+    }
+}
+```
+
+### 5. Проверка работоспособности:
+
+1. Убедитесь, что:
+   - Модуль Диска установлен (Настройки → Модули → Установленные модули → Disk)
+   - В свойствах элемента инфоблока появилось значение "Связанный диск"
+   - Проверьте логи (/bitrix/admin/event_log.php) на наличие ошибок
+
+2. Тестовая последовательность:
+   - Создайте новый элемент в инфоблоке порталов
+   - Проверьте в админке (Контент → Диск), что хранилище создалось
+   - Убедитесь, что ссылка ведет на страницу Диска
+
+### 6. Альтернативный вариант ссылки:
+
+Если предыдущий вариант не работает, попробуйте заменить функцию getPortalLink на:
+
+```php
+function getPortalLink($portalId) {
+    $portal = CIBlockElement::GetByID($portalId)->Fetch();
+    if (!$portal) return '#';
+    
+    if (!empty($portal['PROPERTY_URL_VALUE'])) {
+        return $portal['PROPERTY_URL_VALUE'];
+    }
+    
+    if (!empty($portal['PROPERTY_DISK_STORAGE_VALUE'])) {
+        return '/company/personal/disk/?STORAGE_ID='.(int)$portal['PROPERTY_DISK_STORAGE_VALUE'];
+    }
+    
+    return '#';
+}
+```
+
+Важно: Для работы этих решений должны быть:
+1. Установлен модуль disk
+2. Правильно настроены права доступа к дискам
+3. Корректно созданные хранилища (проверьте в админке Диска)
