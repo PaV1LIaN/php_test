@@ -1,0 +1,156 @@
+### Инструкция: Привязка Диска к элементам инфоблока порталов с автоматической генерацией ссылок
+
+#### 1. Создание свойства "Диск" в инфоблоке
+1. Перейдите в ваш инфоблок порталов
+2. Откройте "Свойства" → "Добавить свойство"
+3. Настройте:
+   - **Тип**: Привязка к диску (Storage)
+   - **Код**: `DISK_STORAGE`
+   - **Название**: "Связанный диск"
+   - **Множественное**: Нет
+4. Сохраните
+
+#### 2. Создание обработчика для автоматической привязки диска
+
+Добавьте в `/local/php_interface/init.php`:
+
+```php
+AddEventHandler("iblock", "OnAfterIBlockElementAdd", "AttachDiskToPortal");
+AddEventHandler("iblock", "OnAfterIBlockElementUpdate", "AttachDiskToPortal");
+
+function AttachDiskToPortal(&$arFields) {
+    if ($arFields["IBLOCK_ID"] == IBLOCK_PORTALS_ID) { // Замените на ID вашего инфоблока
+        // Проверяем, не привязан ли уже диск
+        $element = CIBlockElement::GetByID($arFields["ID"])->Fetch();
+        if (!empty($element["PROPERTY_DISK_STORAGE_VALUE"])) return;
+        
+        // Создаем новое хранилище диска
+        $storage = Bitrix\Disk\Driver::getInstance()->addStorage(array(
+            'NAME' => 'Портал: '.$arFields["NAME"],
+            'ENTITY_TYPE' => Bitrix\Disk\ProxyType\Group::className(),
+            'ENTITY_ID' => 'PORTAL_'.$arFields["ID"],
+            'MODULE_ID' => 'iblock'
+        ));
+        
+        // Привязываем хранилище к элементу
+        CIBlockElement::SetPropertyValuesEx(
+            $arFields["ID"],
+            $arFields["IBLOCK_ID"],
+            array("DISK_STORAGE" => $storage->getId())
+        );
+        
+        // Создаем структуру папок
+        $root = $storage->getRootObject();
+        $folders = array('Документы', 'Шаблоны', 'Общие файлы');
+        foreach ($folders as $folder) {
+            $root->addSubFolder(array('NAME' => $folder));
+        }
+    }
+}
+```
+
+#### 3. Генерация URL для доступа к диску
+
+Добавьте в ваш файл `/local/portal_hub/functions.php`:
+
+```php
+function getPortalLink($portalId) {
+    $portal = CIBlockElement::GetByID($portalId)->Fetch();
+    $storageId = $portal["PROPERTY_DISK_STORAGE_VALUE"];
+    
+    if ($storageId) {
+        return "/company/personal/user/".$USER->GetID()."/disk/folder/".$storageId."/";
+    }
+    return $portal["PROPERTY_URL_VALUE"]; // Возвращаем обычную ссылку, если диск не привязан
+}
+```
+
+#### 4. Модификация шаблона отображения
+
+Обновите `/local/portal_hub/index.php`:
+
+```php
+// Замените строку с выводом ссылки
+<a href="<?=getPortalLink($portal['ID'])?>" target="_blank">
+```
+
+#### 5. Настройка прав доступа к дискам
+
+Создайте файл `/local/php_interface/disk_permissions.php`:
+
+```php
+AddEventHandler("disk", "onAfterAddRight", "SetPortalDiskPermissions");
+function SetPortalDiskPermissions($id, $right) {
+    $storage = Bitrix\Disk\Storage::loadById($right['OBJECT_ID']);
+    if (strpos($storage->getName(), 'Портал: ') === 0) {
+        // Даем доступ группе "Все сотрудники"
+        $storage->setRight('G1', Bitrix\Disk\Security\SecurityContext::FULL);
+    }
+}
+```
+
+#### 6. Создание задачи для CRON (опционально)
+
+Для обработки уже существующих порталов создайте `/local/cron/attach_disks.php`:
+
+```php
+<?php
+require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
+
+$res = CIBlockElement::GetList(
+    array(),
+    array("IBLOCK_ID" => IBLOCK_PORTALS_ID, "PROPERTY_DISK_STORAGE" => false),
+    false,
+    false,
+    array("ID", "NAME")
+);
+
+while ($portal = $res->Fetch()) {
+    $arFields = array(
+        "ID" => $portal["ID"],
+        "IBLOCK_ID" => IBLOCK_PORTALS_ID,
+        "NAME" => $portal["NAME"]
+    );
+    AttachDiskToPortal($arFields);
+}
+```
+
+#### 7. Проверка работы
+
+1. Создайте новый портал или отредактируйте существующий
+2. Проверьте:
+   - В свойствах элемента появилась привязка к диску
+   - По ссылке портала открывается соответствующий диск
+   - В разделе "Диск" → "Все диски" появилось новое хранилище
+
+#### Дополнительные настройки
+
+1. **Интеграция с документами**:
+   ```php
+   // В обработчике AttachDiskToPortal после создания хранилища
+   $documentsFolder = $root->getChild(array('NAME' => 'Документы'));
+   $documentsFolder->addFile(array(
+       'NAME' => 'Инструкция.pdf',
+       'FILE_PATH' => $_SERVER['DOCUMENT_ROOT'].'/local/docs/portal_instruction.pdf'
+   ));
+   ```
+
+2. **Логирование**:
+   ```php
+   AddEventHandler("main", "OnAfterEventLog", "LogDiskAttachments");
+   function LogDiskAttachments($arFields) {
+       if ($arFields["AUDIT_TYPE_ID"] == "IBLOCK_ELEMENT_ADD") {
+           // Логируем создание порталов
+       }
+   }
+   ```
+
+3. **Уведомления**:
+   ```php
+   CEvent::Send("NEW_PORTAL_DISK", "s1", array(
+       "PORTAL_NAME" => $arFields["NAME"],
+       "DISK_LINK" => getPortalLink($arFields["ID"])
+   ));
+   ```
+
+Теперь каждому новому порталу будет автоматически создаваться связанное хранилище на Диске с базовой структурой папок, а в шаблоне ссылки будут вести на соответствующий диск.
