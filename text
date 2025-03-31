@@ -1,20 +1,18 @@
 <?
    require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
+   $APPLICATION->SetTitle("Хаб порталов");
    
-   // Получаем данные портала
-   $portal = CIBlockElement::GetByID($arResult["ID"])->Fetch();
-   $APPLICATION->SetTitle($portal["NAME"]);
+   // Получаем список порталов
+   $res = CIBlockElement::GetList(
+       ["SORT" => "ASC"],
+       ["IBLOCK_ID" => IBLOCK_ID_PORTAL, "ACTIVE" => "Y"],
+       false,
+       false,
+       ["ID", "NAME", "PROPERTY_URL_CODE"]
+   );
    
-   // Подключаем CSS
-   $APPLICATION->SetAdditionalCSS("/local/templates/portal_pages/styles.css");
-   ?>
+   while ($portal = $res->Fetch()) {
+       echo '<a href="/portals/'.$portal["PROPERTY_URL_CODE_VALUE"].'/">'.$portal["NAME"].'</a><br>';
+   }
    
-   <div class="portal-page" style="background: <?=$portal['PROPERTY_THEME_COLOR_VALUE']?>">
-       <h1><?=$portal["NAME"]?></h1>
-       <div class="content">
-           <?=$portal["PROPERTY_CONTENT_VALUE"]["TEXT"]?>
-       </div>
-   </div>
-   
-   <?
    require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");
